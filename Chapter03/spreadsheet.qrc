@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>spreadsheet.ico</file>
+    </qresource>
+</RCC>
