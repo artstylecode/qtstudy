@@ -18,6 +18,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 protected:
     virtual void closeEvent(QCloseEvent *);
 signals:
@@ -48,7 +49,9 @@ private:
     QAction *separatorAction;
     QMenu *fileMenu;
     QMenu *editMenu;
+    QMenu *optionMenu;
     QMenu *helpMenu;
+    QMenu *selectSubMenu;
     QToolBar * fileToolBar;
     QToolBar * editToolBar;
     //file 菜单;
@@ -61,11 +64,16 @@ private:
     //edit 菜单;
     QAction * cutAction;
     QAction * copyAction;
-    QAction * deleteAction;
-    QAction * showGridAction;
-    QAction *selectAllAction;
+    QAction * pasteAction;
+    QAction * deleteAction;    
+    QAction * selectRowAction;
+    QAction * selectColumnAction;
+    QAction * selectAllAction;
     QAction * findAction;
     QAction * gotocellAction;
+    //options
+    QAction * showGridAction;
+    QAction * autoRecalcAction;
     void createActions();
     void createMenu();
     void createContextMenu();
@@ -78,7 +86,7 @@ private:
     bool saveFile(const QString &fileName);
     void setCurrentFile(const QString &fileName);
     void updateRecentFileActions();
-    void strippedName(const QString &fullFileName);
+    QString strippedName(const QString &fullFileName);
 };
 
 #endif // MAINWINDOW_H
