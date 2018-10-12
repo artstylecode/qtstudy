@@ -60,7 +60,9 @@ private:
     QAction * saveAction;
     QAction * saveAsAction;
     QAction * aboutAction;
+    QAction * aboutQtAction;
     QAction * exitAction;
+    QAction * closeAction;
     //edit 菜单;
     QAction * cutAction;
     QAction * copyAction;

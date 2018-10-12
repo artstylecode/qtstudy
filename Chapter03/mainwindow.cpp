@@ -5,6 +5,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+
     spreadsheet = new Spreadsheet;
     setCentralWidget(spreadsheet);
     createActions();
@@ -64,13 +65,18 @@ void MainWindow::createActions()
     connect(saveAsAction, SIGNAL(triggered()), this, SLOT(saveAs()));
 
     aboutAction = new QAction(tr("&about"), this);
-    aboutAction ->setStatusTip("about QT.");
-    connect(aboutAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-
+    aboutAction ->setStatusTip("about application.");
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
+    aboutQtAction = new QAction(tr("&aboutQT"), this);
+    connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    aboutQtAction ->setStatusTip("About QT!");
+    closeAction = new QAction(tr("&close"), this);
+    closeAction ->setStatusTip("close current Widnow.");
+    connect(closeAction, SIGNAL(triggered()), this, SLOT(close()));
     exitAction = new QAction(tr("e&xit"), this);
     exitAction ->setShortcut(tr("Ctrl+q"));
     exitAction ->setStatusTip("exit the spreedsheet application!");
-    connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
+    connect(exitAction, SIGNAL(triggered()), qApp, SLOT(closeAllWindows()));
 
     cutAction = new QAction(tr("cut"),this);
     cutAction ->setShortcut(QKeySequence::Cut);
@@ -150,6 +156,7 @@ void MainWindow::createMenu()
     {
         fileMenu ->addAction(recentActions[i]);
     }
+    fileMenu ->addAction(closeAction);
     fileMenu->addSeparator();
     fileMenu ->addAction(exitAction);
 
@@ -175,7 +182,7 @@ void MainWindow::createMenu()
 
     helpMenu = menuBar()->addMenu("&Help");
     helpMenu ->addAction(aboutAction);
-
+    helpMenu ->addAction(aboutQtAction);
 }
 /**
  * 创建右键菜单
@@ -202,6 +209,7 @@ void MainWindow::createToolBar()
     fileToolBar -> addAction(openAction);
     fileToolBar -> addAction(saveAction);
     fileToolBar -> addAction(saveAsAction);
+
     editToolBar = addToolBar(tr("&Edit"));
     editToolBar -> addAction(cutAction);
     editToolBar -> addAction(pasteAction);
@@ -243,11 +251,22 @@ void MainWindow::updateRecentFileActions()
  */
 void MainWindow::readSettings()
 {
+    QSettings settings("Software Inc", "SpreadSheet");
+    restoreGeometry(settings.value("geometry").toByteArray());
+    recentFiles = settings.value("recentFiles").toStringList();
+    updateRecentFileActions();
+    showGridAction ->setChecked(settings.value("showGrid").toBool());
+    autoRecalcAction ->setChecked(settings.value("autoRecalc").toBool());
 
 }
 void MainWindow::writeSettings()
 {
-
+    QSettings settings("Software Inc", "SpreadSheet");
+    //保存窗口信息
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("recentFiles", recentFiles);
+    settings.setValue("showGrid", showGridAction -> isChecked());
+    settings.setValue("autoRecalc", autoRecalcAction -> isChecked());
 }
 /**
  * 设置当前读取的文件
@@ -277,6 +296,8 @@ void MainWindow::newFile()
 {
     if(okToContinue())
     {
+        MainWindow *newWindow  =new MainWindow();
+        newWindow->show();
         spreadsheet ->clear();
         setCurrentFile("");
     }
@@ -332,12 +353,18 @@ bool MainWindow::saveFile(const QString &fileName)
  */
 void MainWindow::find()
 {
-    if(findDialog!=0)
+    if(findDialog==0)
     {
-       delete findDialog;
+        findDialog = new Finddialog();
+        connect(findDialog, SIGNAL(findNext(QString&,Qt::CaseSensitivity)),
+                spreadsheet, SLOT(findNext(QString&,Qt::CaseSensitivity)));
+        connect(findDialog, SIGNAL(findPrevious(QString&,Qt::CaseSensitivity)),
+                spreadsheet, SLOT(findPrevious(QString&,Qt::CaseSensitivity)));
+
     }
-    findDialog = new Finddialog();
     findDialog->show();
+    findDialog ->raise();
+    findDialog ->activateWindow();
 }
 /**
  *跳转到指定单元格
@@ -345,12 +372,16 @@ void MainWindow::find()
  */
 void MainWindow::gotoCell()
 {
-    if(gotocellDialog!=0)
+    if(gotocellDialog==0)
     {
-        delete gotocellDialog;
+        gotocellDialog = new GoToCellDialog();
+        connect(gotocellDialog, SIGNAL(goToClicked(QString)),
+                spreadsheet, SLOT(goToCell(QString)));
+
     }
-    gotocellDialog = new GoToCellDialog();
     gotocellDialog ->show();
+    gotocellDialog ->raise();
+    gotocellDialog ->activateWindow();
 }
 bool MainWindow::okToContinue()
 {
@@ -382,7 +413,11 @@ void MainWindow::sort()
  */
 void MainWindow::about()
 {
-
+    QMessageBox::about(this , tr("About spreadSheet"),
+                       tr("<h1>SpreadSheet1.0</h1>"
+                          "<p>CopyRight &copy;2008 SoftWare Inc.</p>"
+                          "<p>SpreadSheet is a small Application that</p>")
+                       );
 }
 /**
  *打开最近文档
