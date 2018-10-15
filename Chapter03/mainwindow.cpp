@@ -81,26 +81,30 @@ void MainWindow::createActions()
     cutAction = new QAction(tr("cut"),this);
     cutAction ->setShortcut(QKeySequence::Cut);
     cutAction ->setStatusTip("cut selected content");
-    //connect(cutAction, SIGNAL(triggered()), spreadsheet, SLOT());
+    connect(cutAction, SIGNAL(triggered()), spreadsheet, SLOT(cut()));
     copyAction = new QAction(tr("copy"), this);
     copyAction ->setShortcut(QKeySequence::Copy);
     copyAction ->setStatusTip("copy selected content");
+    connect(copyAction, SIGNAL(triggered()), spreadsheet, SLOT(copy()));
     pasteAction = new QAction(tr("paste"), this);
     pasteAction ->setShortcut(QKeySequence::Paste);
     pasteAction -> setStatusTip("past conent");
+    connect(pasteAction, SIGNAL(triggered()), spreadsheet, SLOT(paste()));
 
     deleteAction = new QAction(tr("del"), this);
     deleteAction -> setShortcut(QKeySequence::Delete);
     deleteAction -> setStatusTip("delete selected content.");
+    connect(deleteAction, SIGNAL(triggered()), spreadsheet, SLOT(del()));
 
     selectRowAction = new QAction(tr("select a row"), this);
     selectRowAction -> setShortcut(tr("Shift+r"));
     selectRowAction -> setStatusTip("select current row.");
+    connect(selectRowAction, SIGNAL(triggered()), spreadsheet, SLOT(selectCurrentRow()));
 
     selectColumnAction = new QAction(tr("select a &column"), this);
     selectColumnAction -> setShortcut(tr("Shift+c"));
     selectColumnAction -> setStatusTip("select current column.");
-
+    connect(selectColumnAction, SIGNAL(triggered()), spreadsheet, SLOT(selectCurrentColumn()));
 
     findAction = new QAction(tr("&find"), this);
     findAction ->setShortcut(QKeySequence::Find);
@@ -234,8 +238,8 @@ void MainWindow::createStatuBar()
     statusBar()->addWidget(locationLabel);
     statusBar() -> addWidget(formualLabel,1);
 
-    connect(spreadsheet, SIGNAL(currentCellChanged(int)), this, SLOT(updateStatusBar()));
-    connect(spreadsheet, SIGNAL(modified()), this , SLOT(spreadsheetModified()));
+    connect(spreadsheet, SIGNAL(currentCellChanged(int , int, int, int)), this, SLOT(updateStatusBar()));
+    //connect(spreadsheet, SIGNAL(modified()), this , SLOT(spreadsheetModified()));
 }
 void MainWindow::updateRecentFileActions()
 {
@@ -284,8 +288,10 @@ void MainWindow::setCurrentFile(const QString &fileName)
         recentFiles.removeAll(showname);
         recentFiles.prepend(showname);
         updateRecentFileActions();
+        spreadsheet->readFile(currentFile);
     }
     setWindowTitle(tr("%1 - %2").arg(showname).arg(tr("spreadsheet")));
+
 }
 //插槽
 /**
@@ -312,6 +318,8 @@ void MainWindow::open()
     {
         QString filename = QFileDialog::getOpenFileName(this,tr("Open SpreadSheet"),
                                                                 ".", tr("SpreadSheet files(*.sp)"));
+        qDebug()<< "filename:"<< filename;
+
         if(!filename.isEmpty())
         {
             loadFile(filename);
@@ -320,7 +328,16 @@ void MainWindow::open()
 
     }
 }
-bool MainWindow::loadFile(const QString &fileName){}
+bool MainWindow::loadFile(const QString &fileName)
+{
+
+    if(spreadsheet->readFile(fileName))
+    {
+        setCurrentFile(fileName);
+        return true;
+    }
+    return false;
+}
 /**
  *保存文件
  * @brief MainWindow::save
@@ -328,7 +345,13 @@ bool MainWindow::loadFile(const QString &fileName){}
  */
 bool MainWindow::save()
 {
-
+    if(currentFile.isEmpty())
+    {
+        return saveAs();
+    }else
+    {
+        return saveFile(currentFile);
+    }
 }
 /**
  *文件另存为
@@ -343,9 +366,10 @@ bool MainWindow::saveAs()
         return false;
     return saveFile(filename);
 }
+
 bool MainWindow::saveFile(const QString &fileName)
 {
-
+    return spreadsheet->writeFile(fileName);
 }
 /**
  *查找当前文件内容
@@ -357,9 +381,9 @@ void MainWindow::find()
     {
         findDialog = new Finddialog();
         connect(findDialog, SIGNAL(findNext(QString&,Qt::CaseSensitivity)),
-                spreadsheet, SLOT(findNext(QString&,Qt::CaseSensitivity)));
+                spreadsheet, SLOT(findNext(QString & ,Qt::CaseSensitivity)));
         connect(findDialog, SIGNAL(findPrevious(QString&,Qt::CaseSensitivity)),
-                spreadsheet, SLOT(findPrevious(QString&,Qt::CaseSensitivity)));
+                spreadsheet, SLOT(findPrevious(QString &,Qt::CaseSensitivity)));
 
     }
     findDialog->show();
@@ -433,8 +457,8 @@ void MainWindow::openRecentFile()
  */
 void MainWindow::updateStatusBar()
 {
-    //locationLabel ->setText(spreadsheet -> currentLocation());
-    //formualLabel -> setText(spreadsheet -> currentFormula());
+    locationLabel ->setText(spreadsheet -> currentLocation());
+    formualLabel -> setText(spreadsheet -> currentFormula());
 }
 /**
  *表格修改

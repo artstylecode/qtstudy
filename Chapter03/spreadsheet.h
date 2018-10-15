@@ -1,23 +1,39 @@
 #ifndef SPREADSHEET_H
 #define SPREADSHEET_H
 #include <QTableWidget>
+
 class Cell;
 class SpreadsheetCompare;
-class SpreadSheet :public QTableWidget
+class Spreadsheet :public QTableWidget
 {
+    Q_OBJECT
 private slots:
     void somethingChanged();
+
+    void cut();
+    void copy();
+    void del();
+    void paste();
+    void selectCurrentRow();
+    void selectCurrentColumn();
+    void findNext( QString & str, Qt::CaseSensitivity cs);
+    void findPrevious(QString &str, Qt::CaseSensitivity cs);
+    void goToCell(QString cellstr);
+    void recalculate();
+
 private:
     enum {MagicNumber=0x7F51C883,RowCount=999,ColumnCount=26};
-    Cell *cell;
     QString text(int row, int col)const;
     QString formula(int row, int col)const;
-    void setFormula(int row, int col);
+    void setFormula(int row, int col, const QString & text);
     bool autoRecalc;
 
-    Q_OBJECT
+    Cell *cell(int row, int columnn)const;
+
+signals:
+    void modified();
 public:
-    SpreadSheet(QWidget * parent =0);
+    Spreadsheet(QWidget * parent =0);
     //自动公式重新计算
     bool autoRecalculate()const;
     //获取当前位置信息
@@ -28,9 +44,9 @@ public:
     QTableWidgetSelectionRange selectedRange()const;
     void clear();
     //读取文件
-    bool readFile(QString * name);
+    bool readFile(const QString & name);
     //保存文件
-    bool writeFile(QString * name);
+    bool writeFile(const QString & name);
 
     void sort(const SpreadsheetCompare & compare);
 };

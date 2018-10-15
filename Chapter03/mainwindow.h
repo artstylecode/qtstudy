@@ -2,13 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "spreadsheet.h"
 
-
-class Spreadsheet: public QTabWidget
-{
-public:
-    bool showGrid(){return true;};
-};
 class QLabel;
 class Finddialog;
 class GoToCellDialog;
@@ -28,6 +23,9 @@ private slots:
     void open();
     bool save();
     bool saveAs();
+
+
+
     void find();
     void gotoCell();
     void sort();
